@@ -7,6 +7,8 @@ import 'package:zero_type/core/di/injection.dart';
 import 'package:zero_type/core/services/sound_service.dart';
 import 'package:zero_type/core/theme/theme_controller.dart';
 import '../controllers/settings_controller.dart';
+import '../controllers/speech_language_provider.dart';
+
 
 @RoutePage()
 class SettingsPage extends ConsumerStatefulWidget {
@@ -183,6 +185,33 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with WidgetsBinding
                       ),
                       loading: () => const _LoadingTile(),
                       error: (_, __) => const SizedBox.shrink(),
+                    ),
+                    const Divider(height: 1, indent: 56),
+                    // Speech Language Selection
+                    _SettingTile(
+                      icon: Icons.translate,
+                      title: '語音辨識語言',
+                      subtitle: '選擇語音輸入語言，會自動套用專屬的轉錄提示詞',
+                      trailing: DropdownButton<String>(
+                        value: ref.watch(speechLanguageProvider),
+                        underline: const SizedBox.shrink(),
+                        borderRadius: BorderRadius.circular(12),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'zh',
+                            child: Text('繁體中文 (台灣)'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'vi',
+                            child: Text('Tiếng Việt (越南語)'),
+                          ),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) {
+                            ref.read(speechLanguageProvider.notifier).setLanguage(val);
+                          }
+                        },
+                      ),
                     ),
                   ],
                 ),

@@ -18,6 +18,7 @@ class AppConstants {
   static const String stopSoundKey = 'stop_sound';
   static const String historyRetentionDaysKey = 'history_retention_days';
   static const String maxRecordingMinutesKey = 'max_recording_minutes';
+  static const String speechLanguageKey = 'speech_language';
 }
 
 class SecureStorageKeys {

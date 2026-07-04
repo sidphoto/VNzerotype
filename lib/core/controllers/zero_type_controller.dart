@@ -175,16 +175,15 @@ class ZeroTypeController extends _$ZeroTypeController {
     final prompt = await ref.read(speechPromptControllerProvider.future);
     final dictionaryPrompt =
         await ref.read(dictionaryRepositoryProvider).buildDictionaryPrompt();
-
+    final prefs = getIt<SharedPreferences>();
+    final language = prefs.getString(AppConstants.speechLanguageKey) ?? 'zh';
     if (config.providerId == null ||
         config.apiKey == null ||
         config.modelId == null) {
       throw Exception('請先完成語音辨識模型設定');
     }
-
     final finalPrompt =
         dictionaryPrompt.isEmpty ? prompt : '$prompt\n\n$dictionaryPrompt';
-
     final service = getIt<SpeechRecognitionService>();
     return service.transcribe(
       audioFilePath: filePath,
@@ -193,6 +192,7 @@ class ZeroTypeController extends _$ZeroTypeController {
       model: config.modelId!,
       prompt: finalPrompt,
       customEndpoint: config.customEndpoint,
+      language: language,
     );
   }
 

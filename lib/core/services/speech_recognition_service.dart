@@ -21,9 +21,9 @@ class SpeechRecognitionService {
     required String model,
     required String prompt,
     String? customEndpoint,
+    String? language,
   }) async {
-    print('[SpeechRecognition] Transcribing with $provider ($model)...');
-
+    print('[SpeechRecognition] Transcribing with $provider ($model) in language: $language...');
     switch (provider) {
       case 'openai':
         return _transcribeWithOpenAI(
@@ -32,6 +32,7 @@ class SpeechRecognitionService {
           model: model,
           prompt: prompt,
           customEndpoint: customEndpoint,
+          language: language,
         );
       case 'gemini':
         return _transcribeWithGemini(
@@ -52,6 +53,7 @@ class SpeechRecognitionService {
     required String model,
     required String prompt,
     String? customEndpoint,
+    String? language,
   }) async {
     final formData = FormData.fromMap({
       'file': await MultipartFile.fromFile(
@@ -61,12 +63,11 @@ class SpeechRecognitionService {
       'model': model,
       'response_format': 'json',
       if (prompt.isNotEmpty) 'prompt': prompt,
+      if (language != null && language.isNotEmpty) 'language': language,
     });
-
     final url = (customEndpoint != null && customEndpoint.isNotEmpty)
         ? customEndpoint
         : 'https://api.openai.com/v1/audio/transcriptions';
-
     final response = await _dio.post<dynamic>(
       url,
       data: formData,
@@ -74,7 +75,6 @@ class SpeechRecognitionService {
         headers: {'Authorization': 'Bearer $apiKey'},
       ),
     );
-
     // Parse JSON response to extract text and token usage
     Map<String, dynamic>? data;
     if (response.data is Map<String, dynamic>) {
@@ -90,12 +90,10 @@ class SpeechRecognitionService {
         );
       }
     }
-
     final text = (data?['text'] as String? ?? '').trim();
     final usageMap = data?['usage'] as Map<String, dynamic>?;
     final inputTokens = usageMap?['input_tokens'] as int?;
     final outputTokens = usageMap?['output_tokens'] as int?;
-
     return (text: text, inputTokens: inputTokens, outputTokens: outputTokens);
   }
 
@@ -107,25 +105,20 @@ class SpeechRecognitionService {
     String? customEndpoint,
   }) async {
     print('[Gemini] Start direct transcription: $audioFilePath');
-
     final fileToUpload = File(audioFilePath);
     if (!fileToUpload.existsSync()) {
       throw Exception('找不到音檔：$audioFilePath');
     }
-
     final mimeType = audioFilePath.endsWith('.m4a')
         ? 'audio/mp4'
         : (audioFilePath.endsWith('.mp3') ? 'audio/mpeg' : 'audio/mp4');
     final audioBytes = await fileToUpload.readAsBytes();
     final base64Audio = base64Encode(audioBytes);
-
     final finalPrompt =
         prompt.isEmpty ? 'Generate a transcript of the speech.' : prompt;
-
     final url = (customEndpoint != null && customEndpoint.isNotEmpty)
         ? '$customEndpoint/$model:generateContent'
         : 'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent';
-
     try {
       final response = await _dio.post<Map<String, dynamic>>(
         url,
@@ -151,25 +144,20 @@ class SpeechRecognitionService {
           },
         ),
       );
-
       final candidates = response.data?['candidates'] as List?;
       if (candidates == null || candidates.isEmpty) {
         throw Exception('Gemini 轉譯失敗：無候選回應');
       }
-
       final parts = candidates[0]['content']?['parts'] as List?;
       if (parts == null || parts.isEmpty) {
         throw Exception('Gemini 轉譯失敗：內容為空');
       }
-
       final text = (parts[0]['text'] as String? ?? '').trim();
-
       // Extract token usage from usageMetadata
       final usageMeta =
           response.data?['usageMetadata'] as Map<String, dynamic>?;
       final inputTokens = usageMeta?['promptTokenCount'] as int?;
       final outputTokens = usageMeta?['candidatesTokenCount'] as int?;
-
       print('[Gemini] Success! tokens: in=$inputTokens out=$outputTokens');
       return (text: text, inputTokens: inputTokens, outputTokens: outputTokens);
     } on DioException catch (e) {

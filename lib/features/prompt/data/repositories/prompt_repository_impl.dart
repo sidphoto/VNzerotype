@@ -11,20 +11,35 @@ class PromptRepositoryImpl implements PromptRepository {
 
   final SharedPreferences _prefs;
 
+  String _getLanguage() {
+    return _prefs.getString(AppConstants.speechLanguageKey) ?? 'zh';
+  }
+
+  String _getPromptPrefsKey() {
+    final lang = _getLanguage();
+    return lang == 'vi' ? '${AppConstants.speechPromptKey}_vi' : AppConstants.speechPromptKey;
+  }
+
   Future<File> _getCustomPromptFile() async {
     final dir = await getApplicationSupportDirectory();
-    return File('${dir.path}/SpeechToText_Custom.prompt');
+    final lang = _getLanguage();
+    final suffix = lang == 'vi' ? '_vi' : '';
+    return File('${dir.path}/SpeechToText_Custom$suffix.prompt');
   }
 
   @override
   Future<String> getDefaultSpeechPrompt() async {
+    final lang = _getLanguage();
+    final assetPath = lang == 'vi' ? 'prompts/SpeechToText_vi.prompt' : 'prompts/SpeechToText.prompt';
     try {
-      final content = await rootBundle.loadString('prompts/SpeechToText.prompt');
+      final content = await rootBundle.loadString(assetPath);
       return content.trim();
     } catch (e) {
-      print('[PromptRepo] ERROR loading SpeechToText.prompt from assets: $e');
+      print('[PromptRepo] ERROR loading $assetPath from assets: $e');
     }
-    return '請將語音精確轉換成繁體中文，並依語意加上適當的標點符號。';
+    return lang == 'vi'
+        ? 'Hãy chuyển ngữ âm thành văn bản tiếng Việt chính xác và thêm dấu câu thích hợp.'
+        : '請將語音精確轉換成繁體中文，並依語意加上適當的標點符號。';
   }
 
   @override
@@ -50,7 +65,7 @@ class PromptRepositoryImpl implements PromptRepository {
     } catch (e) {
       print('[PromptRepo] Error saving custom prompt: $e');
     }
-    await _prefs.setString(AppConstants.speechPromptKey, cleaned);
+    await _prefs.setString(_getPromptPrefsKey(), cleaned);
     return cleaned;
   }
 
@@ -62,7 +77,7 @@ class PromptRepositoryImpl implements PromptRepository {
     } catch (e) {
       print('[PromptRepo] Error deleting custom prompt: $e');
     }
-    await _prefs.remove(AppConstants.speechPromptKey);
+    await _prefs.remove(_getPromptPrefsKey());
     return await getDefaultSpeechPrompt();
   }
 }

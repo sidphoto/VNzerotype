@@ -11,7 +11,6 @@ class PromptPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final speechPrompt = ref.watch(speechPromptControllerProvider);
-
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Padding(
