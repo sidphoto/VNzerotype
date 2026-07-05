@@ -23,6 +23,26 @@
           "name": "Gemini 2.5 Flash"
         }
       ]
+    },
+    {
+      "id": "minimax",
+      "name": "MiniMax (中文)",
+      "models": [
+        {
+          "id": "conformer-2",
+          "name": "Conformer 2 (ASR)"
+        }
+      ]
+    },
+    {
+      "id": "minimax_en",
+      "name": "MiniMax (English)",
+      "models": [
+        {
+          "id": "conformer-2",
+          "name": "Conformer 2 (ASR)"
+        }
+      ]
     }
   ]
 }

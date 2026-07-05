@@ -34,6 +34,28 @@ class SpeechRecognitionService {
           customEndpoint: customEndpoint,
           language: language,
         );
+      case 'minimax':
+        return _transcribeWithOpenAI(
+          audioFilePath: audioFilePath,
+          apiKey: apiKey,
+          model: model,
+          prompt: prompt,
+          customEndpoint: (customEndpoint != null && customEndpoint.isNotEmpty)
+              ? customEndpoint
+              : 'https://api.minimaxi.com/v1/audio/transcriptions',
+          language: language,
+        );
+      case 'minimax_en':
+        return _transcribeWithOpenAI(
+          audioFilePath: audioFilePath,
+          apiKey: apiKey,
+          model: model,
+          prompt: prompt,
+          customEndpoint: (customEndpoint != null && customEndpoint.isNotEmpty)
+              ? customEndpoint
+              : 'https://api.minimax.io/v1/audio/transcriptions',
+          language: language,
+        );
       case 'gemini':
         return _transcribeWithGemini(
           audioFilePath: audioFilePath,
